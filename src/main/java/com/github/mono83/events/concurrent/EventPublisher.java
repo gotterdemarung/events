@@ -15,14 +15,15 @@ public class EventPublisher implements Runnable {
     private final boolean unfold;
 
     /**
-     * Finds all events publishers and makes invokes run method on found.
+     * Finds all events publishers and makes invokes drains raw event from them.
      *
      * @param candidates Runnables
      */
-    public static void findAndRun(final Iterable<Runnable> candidates) {
+    public static void findAndDrain(final Iterable<Runnable> candidates) {
         for (Runnable candidate : candidates) {
             if (candidate instanceof EventPublisher) {
-                candidate.run();
+                EventPublisher ep = (EventPublisher) candidate;
+                ep.consumer.accept(ep.event);
             }
         }
     }
