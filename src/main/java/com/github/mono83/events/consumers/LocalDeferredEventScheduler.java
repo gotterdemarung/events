@@ -53,11 +53,11 @@ public class LocalDeferredEventScheduler implements EventsConsumer, Closeable {
         Instant until = event.getUntil();
         if (!until.isAfter(now)) {
             // Time has come
-            executorService.execute(new EventPublisher(drain, event));
+            executorService.execute(new EventPublisher(drain, event, true));
         } else {
             Duration between = Duration.between(now, until);
             executorService.schedule(
-                    new EventPublisher(drain, event),
+                    new EventPublisher(drain, event, true),
                     between.toNanos(),
                     TimeUnit.NANOSECONDS
             );
