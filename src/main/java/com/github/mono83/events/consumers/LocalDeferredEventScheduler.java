@@ -2,6 +2,7 @@ package com.github.mono83.events.consumers;
 
 import com.github.mono83.events.Event;
 import com.github.mono83.events.EventsConsumer;
+import com.github.mono83.events.concurrent.EventPublisher;
 import com.github.mono83.events.decorators.DeferredEventDecorator;
 
 import java.io.Closeable;
@@ -52,11 +53,11 @@ public class LocalDeferredEventScheduler implements EventsConsumer, Closeable {
         Instant until = event.getUntil();
         if (!until.isAfter(now)) {
             // Time has come
-            executorService.execute(() -> drain.accept(event.getEvent()));
+            executorService.execute(new EventPublisher(drain, event));
         } else {
             Duration between = Duration.between(now, until);
             executorService.schedule(
-                    () -> drain.accept(event.getEvent()),
+                    new EventPublisher(drain, event),
                     between.toNanos(),
                     TimeUnit.NANOSECONDS
             );
