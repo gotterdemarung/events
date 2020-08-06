@@ -4,6 +4,7 @@ import com.github.mono83.events.Event;
 import com.github.mono83.events.EventsConsumer;
 import com.github.mono83.events.decorators.DeferredEventDecorator;
 
+import java.io.Closeable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
@@ -11,9 +12,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-public class LocalDeferredEventScheduler implements EventsConsumer {
+public class LocalDeferredEventScheduler implements EventsConsumer, Closeable {
     private final ScheduledExecutorService executorService;
     private final Consumer<Event> drain;
+    private volatile boolean running = true;
 
     /**
      * Constructs new deferred event scheduler.
@@ -31,7 +33,7 @@ public class LocalDeferredEventScheduler implements EventsConsumer {
 
     @Override
     public void consume(final Event... events) {
-        if (events != null && events.length > 0) {
+        if (running && events != null && events.length > 0) {
             for (Event event : events) {
                 if (event instanceof DeferredEventDecorator) {
                     schedule((DeferredEventDecorator<?>) event);
@@ -59,5 +61,14 @@ public class LocalDeferredEventScheduler implements EventsConsumer {
                     TimeUnit.NANOSECONDS
             );
         }
+    }
+
+    /**
+     * Stops schedules.
+     * After this, scheduler will not consume any event, but scheduled tasks remains in executor.
+     */
+    @Override
+    public void close() {
+        this.running = false;
     }
 }
