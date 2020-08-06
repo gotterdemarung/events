@@ -19,6 +19,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 
 public class Connector implements EventsConsumer, Closeable, ShutdownListener {
     private final ConnectionFactory connectionFactory;
@@ -29,8 +30,8 @@ public class Connector implements EventsConsumer, Closeable, ShutdownListener {
     private final Duration shortDelay;
     private final Duration longDelay;
     private final ObjectMapper mapper;
-    private volatile Connection connection;
-    private volatile Channel channel;
+    volatile Connection connection;
+    volatile Channel channel;
 
     public Connector(
             final ConnectionFactory connectionFactory,
@@ -85,13 +86,33 @@ public class Connector implements EventsConsumer, Closeable, ShutdownListener {
             }
         } else {
             exchange = exchangeName;
-            routingKey = "main";
+            routingKey = "";
         }
 
         try {
             channel.basicPublish(exchange, routingKey, builder.build(), mapper.writeValueAsBytes(event));
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public void subscribeToQueue(final String queueName, final Consumer<Event> consumer) {
+        try {
+            Channel channel = connection.createChannel();
+            channel.basicConsume(queueName, true, new RabbitMqConsumer(channel, mapper, consumer));
+        } catch (IOException error) {
+            throw new RuntimeException(error);
+        }
+    }
+
+    public void subscribeToExchange(final String exchangeName, final Consumer<Event> consumer) {
+        try {
+            Channel channel = connection.createChannel();
+            AMQP.Queue.DeclareOk specs = channel.queueDeclare();
+            channel.queueBind(specs.getQueue(), exchangeName, "");
+            channel.basicConsume(specs.getQueue(), true, new RabbitMqConsumer(channel, mapper, consumer));
+        } catch (IOException error) {
+            throw new RuntimeException(error);
         }
     }
 
@@ -119,7 +140,7 @@ public class Connector implements EventsConsumer, Closeable, ShutdownListener {
 
             // Declaring main queue
             channel.queueDeclare(mainQueueName, true, false, false, null);
-            channel.queueBind(mainQueueName, exchangeName, "main");
+            channel.queueBind(mainQueueName, exchangeName, "");
 
             // Declaring short delay queue
             channel.queueDeclare(
