@@ -21,16 +21,27 @@ public class ClassNameEventsRouter implements EventsConsumer {
     public void consume(final Event... events) {
         if (events != null && events.length > 0) {
             for (Event event : events) {
-                this.consume(event);
+                this.dispatch(event);
             }
         }
     }
 
+    /**
+     * Registers given events consumer.
+     *
+     * @param consumer Events consumer.
+     * @param classes  Event classes to listen. If no classes given, will listen for all event types.
+     */
     public void register(
             final EventsConsumer consumer,
             final Class<?>... classes
     ) {
-        if (consumer != null && classes != null && classes.length > 0) {
+        if (consumer == null) {
+            // No consumer given
+            return;
+        }
+
+        if (classes != null && classes.length > 0) {
             for (Class<?> clazz : classes) {
                 if (clazz == Event.class) {
                     rootConsumers.add(consumer);
@@ -38,10 +49,18 @@ public class ClassNameEventsRouter implements EventsConsumer {
                     consumers.computeIfAbsent(clazz, ($) -> new CopyOnWriteArrayList<>()).add(consumer);
                 }
             }
+        } else {
+            // Registering on root level
+            rootConsumers.add(consumer);
         }
     }
 
-    private void consume(final Event event) {
+    /**
+     * Sends given event to registered consumers.
+     *
+     * @param event Event to dispatch.
+     */
+    private void dispatch(final Event event) {
         Class<?> clazz = event.getClass();
         for (Class<?> c : inheritanceTree.computeIfAbsent(clazz, ClassNameEventsRouter::buildInheritanceTreeForClass)) {
             List<EventsConsumer> eventsConsumers = consumers.get(c);
@@ -57,6 +76,12 @@ public class ClassNameEventsRouter implements EventsConsumer {
         }
     }
 
+    /**
+     * Static helper method, that generates classes from inheritance tree.
+     *
+     * @param clazz Class for lookup
+     * @return Class inheritance up to {@see Event}
+     */
     private static Class<?>[] buildInheritanceTreeForClass(final Class<?> clazz) {
         ArrayList<Class<?>> classes = new ArrayList<>();
         classes.add(clazz);
