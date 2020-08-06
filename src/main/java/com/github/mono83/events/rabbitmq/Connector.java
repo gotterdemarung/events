@@ -3,6 +3,7 @@ package com.github.mono83.events.rabbitmq;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.mono83.events.Event;
 import com.github.mono83.events.EventsConsumer;
+import com.github.mono83.events.decorators.DeadLetterDecorator;
 import com.github.mono83.events.decorators.DeferredEventDecorator;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -62,6 +63,11 @@ public class Connector implements EventsConsumer, Closeable, ShutdownListener {
     }
 
     private void publish(final Event event) {
+        if (event instanceof DeadLetterDecorator) {
+            this.publish(((DeadLetterDecorator<?>) event).getEvent());
+            return;
+        }
+
         String exchange, routingKey;
         AMQP.BasicProperties.Builder builder = new AMQP.BasicProperties.Builder();
         if (event instanceof DeferredEventDecorator) {
