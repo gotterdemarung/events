@@ -3,7 +3,7 @@ package com.github.mono83.events;
 /**
  * Void implementation of event.
  */
-public class VoidEvent implements Event {
+public class VoidEvent {
     public static final VoidEvent INSTANCE = new VoidEvent();
 
     private VoidEvent() {

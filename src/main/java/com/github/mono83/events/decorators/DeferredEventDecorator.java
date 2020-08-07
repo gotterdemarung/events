@@ -1,7 +1,6 @@
 package com.github.mono83.events.decorators;
 
 import com.github.mono83.events.AbstractEventDecorator;
-import com.github.mono83.events.Event;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -9,7 +8,7 @@ import java.util.Objects;
 /**
  * Contains other event, that should be invoked no sooner that configured time.
  */
-public class DeferredEventDecorator<T extends Event> extends AbstractEventDecorator<T> {
+public class DeferredEventDecorator<T> extends AbstractEventDecorator<T> {
     private final Instant until;
 
     /**

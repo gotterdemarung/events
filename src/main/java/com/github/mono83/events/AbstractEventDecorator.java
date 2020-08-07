@@ -5,7 +5,7 @@ import java.util.Objects;
 /**
  * Abstract wrapper to be used in event decorators.
  */
-public abstract class AbstractEventDecorator<T extends Event> implements Event {
+public abstract class AbstractEventDecorator<T> {
     private final T event;
 
     /**

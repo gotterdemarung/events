@@ -1,7 +1,6 @@
 package com.github.mono83.events.concurrent;
 
 import com.github.mono83.events.AbstractEventDecorator;
-import com.github.mono83.events.Event;
 
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -10,8 +9,8 @@ import java.util.function.Consumer;
  * Decorator to standard runnable.
  */
 public class EventPublisher implements Runnable {
-    private final Consumer<Event> consumer;
-    private final Event event;
+    private final Consumer<Object> consumer;
+    private final Object event;
     private final boolean unfold;
 
     /**
@@ -34,8 +33,9 @@ public class EventPublisher implements Runnable {
      * @param consumer Consumer to send data into
      * @param event    Event to send
      */
-    public EventPublisher(final Consumer<Event> consumer, final Event event) {
-        this.consumer = Objects.requireNonNull(consumer, "consumer");
+    @SuppressWarnings("unchecked")
+    public EventPublisher(final Consumer<?> consumer, final Object event) {
+        this.consumer = (Consumer<Object>) Objects.requireNonNull(consumer, "consumer");
         this.event = Objects.requireNonNull(event, "event");
         this.unfold = false;
     }
@@ -47,8 +47,9 @@ public class EventPublisher implements Runnable {
      * @param event    Event to send
      * @param unfold   If true, publisher will send inner event inside decorated one.
      */
-    public EventPublisher(final Consumer<Event> consumer, final AbstractEventDecorator<?> event, final boolean unfold) {
-        this.consumer = Objects.requireNonNull(consumer, "consumer");
+    @SuppressWarnings("unchecked")
+    public EventPublisher(final Consumer<?> consumer, final AbstractEventDecorator<?> event, final boolean unfold) {
+        this.consumer = (Consumer<Object>) Objects.requireNonNull(consumer, "consumer");
         this.event = Objects.requireNonNull(event, "event");
         this.unfold = unfold;
     }
@@ -65,7 +66,7 @@ public class EventPublisher implements Runnable {
     /**
      * @return Event to publish
      */
-    public Event getEvent() {
+    public Object getEvent() {
         return this.event;
     }
 }

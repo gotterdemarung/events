@@ -1,25 +1,21 @@
 package com.github.mono83.events.consumers;
 
-import com.github.mono83.events.Event;
-import com.github.mono83.events.EventsConsumer;
-
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 
 /**
  * Counts consumed events by class name.
  */
-public class ClassNameCountingEventsConsumer implements EventsConsumer {
+public class ClassNameCountingEventsConsumer implements Consumer<Object> {
     private final ConcurrentHashMap<String, AtomicLong> counters = new ConcurrentHashMap<>();
 
     @Override
-    public void consume(final Event... events) {
-        if (events != null && events.length > 0) {
-            for (Event event : events) {
-                counters.computeIfAbsent(event.getClass().getName(), $ -> new AtomicLong()).incrementAndGet();
-            }
+    public void accept(final Object event) {
+        if (event != null) {
+            counters.computeIfAbsent(event.getClass().getName(), $ -> new AtomicLong()).incrementAndGet();
         }
     }
 

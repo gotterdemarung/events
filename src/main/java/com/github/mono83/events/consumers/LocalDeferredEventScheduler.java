@@ -1,7 +1,5 @@
 package com.github.mono83.events.consumers;
 
-import com.github.mono83.events.Event;
-import com.github.mono83.events.EventsConsumer;
 import com.github.mono83.events.concurrent.EventPublisher;
 import com.github.mono83.events.decorators.DeferredEventDecorator;
 
@@ -13,9 +11,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-public class LocalDeferredEventScheduler implements EventsConsumer, Closeable {
+public class LocalDeferredEventScheduler implements Consumer<Object>, Closeable {
     private final ScheduledExecutorService executorService;
-    private final Consumer<Event> drain;
+    private final Consumer<?> drain;
     private volatile boolean running = true;
 
     /**
@@ -26,20 +24,16 @@ public class LocalDeferredEventScheduler implements EventsConsumer, Closeable {
      */
     public LocalDeferredEventScheduler(
             final ScheduledExecutorService executorService,
-            final Consumer<Event> drain
+            final Consumer<?> drain
     ) {
         this.executorService = Objects.requireNonNull(executorService, "executorService");
         this.drain = Objects.requireNonNull(drain, "drain");
     }
 
     @Override
-    public void consume(final Event... events) {
-        if (running && events != null && events.length > 0) {
-            for (Event event : events) {
-                if (event instanceof DeferredEventDecorator) {
-                    schedule((DeferredEventDecorator<?>) event);
-                }
-            }
+    public void accept(final Object event) {
+        if (running && event instanceof DeferredEventDecorator) {
+            schedule((DeferredEventDecorator<?>) event);
         }
     }
 

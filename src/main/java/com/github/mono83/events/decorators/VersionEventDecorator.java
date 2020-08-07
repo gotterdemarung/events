@@ -1,12 +1,11 @@
 package com.github.mono83.events.decorators;
 
 import com.github.mono83.events.AbstractEventDecorator;
-import com.github.mono83.events.Event;
 
 /**
  * Adds versioning to events.
  */
-public class VersionEventDecorator<T extends Event> extends AbstractEventDecorator<T> {
+public class VersionEventDecorator<T> extends AbstractEventDecorator<T> {
     private final int version;
 
     /**
