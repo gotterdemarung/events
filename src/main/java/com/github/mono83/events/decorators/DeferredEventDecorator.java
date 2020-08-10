@@ -2,6 +2,7 @@ package com.github.mono83.events.decorators;
 
 import com.github.mono83.events.AbstractEventDecorator;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 
@@ -20,6 +21,19 @@ public class DeferredEventDecorator<T> extends AbstractEventDecorator<T> {
     public DeferredEventDecorator(final T event, final Instant until) {
         super(event);
         this.until = Objects.requireNonNull(until, "until");
+    }
+
+    /**
+     * Constructs new deferred event using given delay value.
+     *
+     * @param event Event to defer.
+     * @param delay Event delay.
+     */
+    public DeferredEventDecorator(final T event, final Duration delay) {
+        this(
+                event,
+                Instant.now().plus(delay)
+        );
     }
 
     /**
