@@ -12,14 +12,20 @@ public class DeadLetterDecorator<T> extends AbstractEventDecorator<T> {
      * @param event Source event.
      * @return Event wrapped into dead letter decorator.
      */
-    public static <T> DeadLetterDecorator<?> of(final T event) {
+    @SuppressWarnings("unchecked")
+    public static <T> DeadLetterDecorator<T> of(final T event) {
         if (event instanceof DeadLetterDecorator) {
-            return of(((DeadLetterDecorator<?>) event).getEvent());
+            return of(((DeadLetterDecorator<T>) event).getEvent());
         }
 
         return new DeadLetterDecorator<>(event);
     }
 
+    /**
+     * Private constructor.
+     *
+     * @param event Event to decorate.
+     */
     private DeadLetterDecorator(final T event) {
         super(event);
     }
