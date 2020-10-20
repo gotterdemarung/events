@@ -1,5 +1,7 @@
 package com.github.mono83.events;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Objects;
 
 /**
@@ -20,7 +22,13 @@ public abstract class AbstractEventDecorator<T> {
     /**
      * @return Original event.
      */
+    @JsonProperty("event")
     public T getEvent() {
         return event;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getEvent());
     }
 }

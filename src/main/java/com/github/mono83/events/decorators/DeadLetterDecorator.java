@@ -1,5 +1,7 @@
 package com.github.mono83.events.decorators;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.mono83.events.AbstractEventDecorator;
 
 /**
@@ -13,7 +15,8 @@ public class DeadLetterDecorator<T> extends AbstractEventDecorator<T> {
      * @return Event wrapped into dead letter decorator.
      */
     @SuppressWarnings("unchecked")
-    public static <T> DeadLetterDecorator<T> of(final T event) {
+    @JsonCreator
+    public static <T> DeadLetterDecorator<T> of(@JsonProperty("event") final T event) {
         if (event instanceof DeadLetterDecorator) {
             return of(((DeadLetterDecorator<T>) event).getEvent());
         }
@@ -28,5 +31,13 @@ public class DeadLetterDecorator<T> extends AbstractEventDecorator<T> {
      */
     private DeadLetterDecorator(final T event) {
         super(event);
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DeadLetterDecorator<?> that = (DeadLetterDecorator<?>) o;
+        return this.getEvent().equals(that.getEvent());
     }
 }
