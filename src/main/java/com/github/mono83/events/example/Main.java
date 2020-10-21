@@ -1,73 +1,31 @@
 package com.github.mono83.events.example;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.mono83.events.consumers.ClassNameEventsRouter;
-import com.github.mono83.events.consumers.DebugEventNamePrinter;
 import com.github.mono83.events.decorators.DeferredEventDecorator;
-import com.github.mono83.events.json.JacksonByteReader;
-import com.github.mono83.events.json.JacksonByteWriter;
 import com.github.mono83.events.rabbitmq.Dispatcher;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.ConnectionFactory;
+import com.github.mono83.events.spring.EventHandlerAnnotationBeanPostProcessor;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.time.Duration;
-import java.util.List;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicLong;
+import java.time.Instant;
 
+/**
+ * This example requires some dependencies, that are marked "provided"
+ * To make it work - comment <scope>provided</scope> in main pom.xml file
+ */
 public class Main {
-    public static void main(String[] args) throws Exception {
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setVirtualHost("foo");
-        factory.setUsername("guest");
-        factory.setPassword("guest");
+    public static void main(String[] args) throws InterruptedException {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(
+                MainConfiguration.class,
+                EventHandlerAnnotationBeanPostProcessor.class,
+                Handlers.class
+        );
 
-        ClassNameEventsRouter router = new ClassNameEventsRouter();
-        router.register(new DebugEventNamePrinter(), Object.class);
-//        router.register(new DebugEventNamePrinter(), CounterEvent.class);
+        System.out.println(Instant.now() + " Sending plain events");
+        context.getBean(Dispatcher.class).accept(new GreeterEvent("World"));
+        context.getBean(Dispatcher.class).accept(new GreeterWithTimeEvent("World"));
+        Thread.sleep(1000);
 
-        Dispatcher dispatcher = new Dispatcher(
-                factory.newConnection(),
-                "eventbus",
-                List.of(Duration.ofSeconds(5), Duration.ofMinutes(1), Duration.ofHours(1)),
-                new JacksonByteReader(),
-                new JacksonByteWriter(),
-                router
-        ) {
-            @Override
-            protected Object onBeforeIncoming(final Object o) {
-                System.out.println("INCOMING");
-                return o;
-            }
-        };
-
-        Random random = new Random();
-
-        while (true) {
-            Thread.sleep(500);
-            Duration delay = Duration.ofMillis(random.nextInt(3000));
-            System.out.println("Sending with delay " + delay);
-//            dispatcher.accept(new CounterEvent());
-            dispatcher.accept(new DeferredEventDecorator<>(new CounterEvent(), delay));
-        }
-    }
-
-    public static class CounterEvent {
-        private static final AtomicLong counter = new AtomicLong();
-        @JsonProperty
-        private long i;
-
-        public CounterEvent(@JsonProperty("i") long i) {
-            this.i = i;
-        }
-
-        public CounterEvent() {
-            this.i = counter.incrementAndGet();
-        }
-
-        @Override
-        public String toString() {
-            return "I'm #" + i;
-        }
+        System.out.println(Instant.now() + " Deferring for 3s");
+        context.getBean(Dispatcher.class).accept(new DeferredEventDecorator<>(new GreeterEvent("World"), Duration.ofSeconds(3)));
     }
 }

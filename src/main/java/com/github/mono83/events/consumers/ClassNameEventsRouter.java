@@ -1,6 +1,8 @@
 package com.github.mono83.events.consumers;
 
 
+import com.github.mono83.events.ClassNameHandlerRegistry;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,7 +12,7 @@ import java.util.function.Consumer;
 /**
  * Events consumer, that routes events by class name.
  */
-public class ClassNameEventsRouter implements Consumer<Object> {
+public class ClassNameEventsRouter implements ClassNameHandlerRegistry, Consumer<Object> {
     private final ConcurrentHashMap<Class<?>, Class<?>[]> inheritanceTree = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Class<?>, List<Consumer<Object>>> consumers = new ConcurrentHashMap<>();
     private final List<Consumer<Object>> rootConsumers = new CopyOnWriteArrayList<>();
@@ -29,6 +31,7 @@ public class ClassNameEventsRouter implements Consumer<Object> {
      * @param classes  Event classes to listen. If no classes given, will listen for all event types.
      */
     @SuppressWarnings("unchecked")
+    @Override
     public void register(
             final Consumer<?> consumer,
             final Class<?>... classes
